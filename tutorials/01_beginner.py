@@ -11,24 +11,24 @@ if debug_display:
 # size 60,000 training images and 10,000 test images
 # 28x28 arrays of 0-255 -> single integer
 mnist = tf.keras.datasets.mnist
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
+(x_train_raw, y_train), (x_test_raw, y_test) = mnist.load_data()
 
 if debug_display:
     print("\nThis is a randomly selected piece of training data:")
     print("X = ")
-    print(x_train[displaynum])
+    print(x_train_raw[displaynum])
     print("Y = ")
     print(y_train[displaynum])
 
 # conver the samples from integers to floating point numbers
-x_train, x_test = x_train / 255.0, x_test / 255.0
+x_train, x_test = x_train_raw / 255.0, x_test_raw / 255.0
 
-if debug_display:
-    print("\nNow adjusted to floating point:")
-    print("X = ")
-    print(x_train[displaynum])
-    print("Y = ")
-    print(y_train[displaynum])
+# if debug_display:
+#     print("\nNow adjusted to floating point:")
+#     print("X = ")
+#     print(x_train[displaynum])
+#     print("Y = ")
+#     print(y_train[displaynum])
 
 # build the model by stacking layers
 model = tf.keras.models.Sequential([
@@ -60,8 +60,9 @@ print(predictions)
 # turn the outputs into probabilities
 # it's apparently bad practice to bake this into the last layer of the NN for reasons i don't fully understand yet
 softmax_probabilities = tf.nn.softmax(predictions)
-print("\nProbabilistic output using softmax:")
-print(softmax_probabilities)
+print("\nProbabilistic output using softmax (%):")
+with numpy.printoptions(formatter={'float': '{: 0.8f}'.format}):
+    print(softmax_probabilities.numpy() * 100)
 
 # set up the loss function for the newtork
 # the untrained model gives probabilities close to random (1/10 for each class), so the initial loss should be close to tf.log(1/10) ~= 2.3
@@ -78,9 +79,33 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 # fit the model to the training data
+# for this example, epochs=1 is 90%, 5 is 97%, 10 is 98%
 print("\nTrain the model:")
-model.fit(x_train, y_train, epochs=5)
+train_result = model.fit(x_train, y_train, epochs=1)
 
 # evaluate the model with test data
 print("\nEvaluate the model:")
-model.evaluate(x_test, y_test)
+eval_result = model.evaluate(x_test, y_test)
+
+# print a few examples of losses
+
+print("\nA few examples of classified items from test set:")
+num_printed = 0
+for i in range(0, len(x_test)):
+
+    eval_result = model.evaluate(x_test[i:i+1], y_test[i:i+1], verbose=0)
+    if eval_result[1] < 1.0: # accuracy fail
+
+        # turn the outputs into probabilities
+        final_predictions = model(x_test[i:i+1])
+        final_softmax_probabilities = tf.nn.softmax(final_predictions)
+        print("\nProbabilistic output using softmax for x_test[" + str(i) + "]")
+        print("y_test=" + str(y_test[i]))
+        with numpy.printoptions(formatter={'float': '{: 0.8f}'.format}):
+            print(final_softmax_probabilities.numpy() * 100)
+
+        print(x_test_raw[i])
+
+        num_printed += 1
+        if num_printed == 5:
+            break
