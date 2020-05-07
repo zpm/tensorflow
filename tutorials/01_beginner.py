@@ -8,7 +8,7 @@ if debug_display:
     displaynum = random.randrange(0,60000-1)
 
 # import the keras handwritten numbers training data
-# size 60,000 training images and 10,000 test images
+# 60,000 training images and 10,000 test images
 # 28x28 arrays of 0-255 -> single integer
 mnist = tf.keras.datasets.mnist
 (x_train_raw, y_train), (x_test_raw, y_test) = mnist.load_data()
@@ -20,7 +20,7 @@ if debug_display:
     print("Y = ")
     print(y_train[displaynum])
 
-# conver the samples from integers to floating point numbers
+# convert the samples from integers to floating point numbers
 x_train, x_test = x_train_raw / 255.0, x_test_raw / 255.0
 
 # if debug_display:
@@ -88,7 +88,29 @@ print("\nEvaluate the model:")
 eval_result = model.evaluate(x_test, y_test)
 
 # print a few examples of losses
-print("\nA few examples of classified items from test set:")
+print("\nA few examples of misclassified items from training set:")
+num_printed = 0
+for i in range(0, len(x_train)):
+
+    eval_result = model.evaluate(x_train[i:i+1], y_train[i:i+1], verbose=0)
+    if eval_result[1] < 1.0: # accuracy fail
+
+        # turn the outputs into probabilities
+        final_predictions = model(x_train[i:i+1])
+        final_softmax_probabilities = tf.nn.softmax(final_predictions)
+        print("\nProbabilistic output using softmax for x_train[" + str(i) + "]")
+        print("y_train=" + str(y_train[i]))
+        with numpy.printoptions(formatter={'float': '{: 0.8f}'.format}):
+            print(final_softmax_probabilities.numpy() * 100)
+
+        print(x_train_raw[i])
+
+        num_printed += 1
+        if num_printed == 5:
+            break
+
+# print a few examples of losses
+print("\nA few examples of misclassified items from test set:")
 num_printed = 0
 for i in range(0, len(x_test)):
 
