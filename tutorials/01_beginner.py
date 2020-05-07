@@ -81,14 +81,13 @@ model.compile(optimizer='adam',
 # fit the model to the training data
 # for this example, epochs=1 is 90%, 5 is 97%, 10 is 98%
 print("\nTrain the model:")
-train_result = model.fit(x_train, y_train, epochs=1)
+train_result = model.fit(x_train, y_train, epochs=5)
 
 # evaluate the model with test data
 print("\nEvaluate the model:")
 eval_result = model.evaluate(x_test, y_test)
 
 # print a few examples of losses
-
 print("\nA few examples of classified items from test set:")
 num_printed = 0
 for i in range(0, len(x_test)):
